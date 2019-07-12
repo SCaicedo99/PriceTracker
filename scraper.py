@@ -2,6 +2,7 @@
 import requests
 from bs4 import BeautifulSoup
 import smtplib # TODO find out more about this library
+import item
 
 URL = 'https://www.amazon.com/BIC-Round-Ballpoint-Medium-60-Count/dp/B0012YVGOW?ref_=Oct_' \
       'DLandingS_PC_6a44c109_0&smid=ATVPDKIKX0DER&th=1&psc=1'
@@ -12,6 +13,7 @@ headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 page = requests.get(URL, headers=headers)
 
 def check_price():
+    # because amazon.com is written in javascript, I need to do this twice so I can access the elements I need
     soup1 = BeautifulSoup(page.content, 'html.parser')
     soup2 = BeautifulSoup(soup1.prettify(), 'html.parser')
 
@@ -23,8 +25,8 @@ def check_price():
     print(title.strip())
     print(converted_price)
 
-    if converted_price > ideal_amount:
-        send_mail()
+    # if converted_price ideal_amount:
+    #     send_mail()
 
 
 def send_mail():
@@ -49,4 +51,9 @@ def send_mail():
 
     server.quit()
 
-check_price()
+
+# check_price()
+
+print(item.x)
+
+

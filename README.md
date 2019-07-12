@@ -14,4 +14,9 @@ predetermined amount by the user.
  - In the future make a GUI to make it more user friendly, rather than just a
  text command based
  
+ ## Authors and acknowledgment: 
+ Author: Sebastian Caicedo (SCaicedo99 on github)
+ 
+ Thanks to the youtube channel [DevEd](https://www.youtube.com/channel/UClb90NQQcskPUGDIXsQEz5Q)
+ for the inspiration to start this project.
  
