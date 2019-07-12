@@ -2,7 +2,7 @@
 import requests
 from bs4 import BeautifulSoup
 import smtplib # TODO find out more about this library
-import item
+from item import Item
 
 URL = 'https://www.amazon.com/BIC-Round-Ballpoint-Medium-60-Count/dp/B0012YVGOW?ref_=Oct_' \
       'DLandingS_PC_6a44c109_0&smid=ATVPDKIKX0DER&th=1&psc=1'
@@ -35,7 +35,7 @@ def send_mail():
     server.starttls()
     server.ehlo()
 
-    server.login('sebascaicedo25@gmail.com','vhhrbzhfcvoyffkz')
+    server.login('sebascaicedo25@gmail.com', 'vhhrbzhfcvoyffkz')
 
     subject = 'Price fell down'
     body = 'Check the amazon link: https://www.amazon.com/BIC-Round-Ballpoint-Medium-60-Count/dp/B0012YVGOW?ref_=Oct_' \
@@ -53,7 +53,7 @@ def send_mail():
 
 
 # check_price()
-
-print(item.x)
+temp = Item(4)
+print(temp.x)
 
 
