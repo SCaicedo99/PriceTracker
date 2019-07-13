@@ -1,8 +1,8 @@
 # pip install request bs4
 import requests
 from bs4 import BeautifulSoup
-import smtplib # TODO find out more about this library
-from item import Item
+import smtplib  # This is just a protocol that sends emails
+from item import AmazonItem  # Items object which will contain its information (price)
 
 URL = 'https://www.amazon.com/BIC-Round-Ballpoint-Medium-60-Count/dp/B0012YVGOW?ref_=Oct_' \
       'DLandingS_PC_6a44c109_0&smid=ATVPDKIKX0DER&th=1&psc=1'
@@ -53,7 +53,8 @@ def send_mail():
 
 
 # check_price()
-temp = Item(4)
-print(temp.x)
+temp = AmazonItem(URL)
+test = temp.get_camel_url()
+print(test)
 
 
