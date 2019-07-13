@@ -1,3 +1,5 @@
 __pycache__
 get-pip.py
-*.idea
+workspace.xml
+usage.statistics.xml
+tasks.xml
