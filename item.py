@@ -6,5 +6,5 @@ class Item:
         print(self.x)
 
 
-p1 = Item(4)
-p1.getx()
+# p1 = Item(4)
+# p1.getx()
