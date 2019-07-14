@@ -56,7 +56,8 @@ def send_mail():
 temp = AmazonItem(URL)
 test = temp.camel_soup
 # print(type(test.find(id='histories')))
-x = test.find(class_='highest_price').contents[3].contents[0]
+# x = test.find(class_='lowest_price').contents[5].contents[0]
+x = temp.highest_price_date
 print(x)
 # print(temp.strip_str_to_float(x))
 

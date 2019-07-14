@@ -3,16 +3,20 @@ import requests
 # TODO maybe think about how many different websites this app will work on, and how they are going to be parsed. \
 # TODO because some things need to be hardcoded
 # TODO I can make some methods private, i.e self.get_camel_soup()
+
+
 class AmazonItem:
     def __init__(self, URL):
         self.URL = URL
         self.headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                                 '(KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'}
+                        '(KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'}
         self.soup = self.get_soup()
         self.camel_soup = self.get_camel_soup(self.get_camel_url())
-        # self.highest_price = TODO don't forget to populate this
-        # self.highest_price_date = TODO and this
-
+        self.highest_price = self.get_highest_price()
+        self.highest_price_date = self.get_highest_price_date()
+        self.lowest_price = self.get_lowest_price()
+        self.lowest_price_date = self.get_lowest_price_date()
+        self.avg_price = self.get_avg_price()
 
     def get_soup(self):
         page = requests.get(self.URL, headers=self.headers)
@@ -38,13 +42,24 @@ class AmazonItem:
         return soup
 
     def get_highest_price(self):
-        pass
+        price = self.camel_soup.find(class_='highest_price').contents[3].contents[0]
+        return float(price[1:])
+
+    def get_highest_price_date(self):
+        date = self.camel_soup.find(class_='highest_price').contents[5].contents[0]
+        return date
 
     def get_lowest_price(self):
-        pass
+        price = self.camel_soup.find(class_='lowest_price').contents[3].contents[0]
+        return float(price[1:])
+
+    def get_lowest_price_date(self):
+        date = self.camel_soup.find(class_='lowest_price').contents[5].contents[0]
+        return date
 
     def get_avg_price(self):
-        pass
+        price = self.camel_soup.find(class_="product_pane").contents[3].contents[7].contents[3].contents[0]
+        return float(price[1:])
 
     def get_price(self):
         return float(self.soup.find(id="priceblock_ourprice").get_text()[1:])
@@ -55,6 +70,3 @@ class AmazonItem:
         return self.URL
 
 
-
-# p1 = Item(4)
-# p1.getx()
