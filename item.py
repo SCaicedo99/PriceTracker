@@ -17,14 +17,15 @@ class AmazonItem:
 
     def get_camel_url(self):
         url = self.get_url()
-        res = ''
+        limit1 = 0;
+        limit2 = 0;
         for x in range(22, len(url)):
             if(url[x]+url[x+1]) == 'dp':
-                res += 'product'
-                x += 2
+                limit1 = x
             if url[x] == '?':
-                return 'https://camelcamelcamel.com'+res
-            res += url[x]
+                limit2 = x
+                break
+        return 'https://camelcamelcamel.com' + url[22:limit1] + 'product' + url[limit1+2:limit2]
 
     def get_price(self):
         return float(self.soup.find(id="priceblock_ourprice").get_text()[1:])
