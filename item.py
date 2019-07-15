@@ -10,10 +10,10 @@ class AmazonItem:
         self.url = url
         self.headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                         '(KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'}
-        self.title = self.__get_title()
         self.amazon_soup = self.__get_soup()
-        self.current_price = self.__get_price()
         self.camel_soup = self.__get_camel_soup(self.__get_camel_url())
+        self.title = self.__get_title()
+        self.current_price = self.__get_price()
         self.highest_price = self.__get_highest_price()
         self.highest_price_date = self.__get_highest_price_date()
         self.lowest_price = self.__get_lowest_price()
@@ -21,13 +21,13 @@ class AmazonItem:
         self.avg_price = self.__get_avg_price()
 
     def __get_soup(self):
-        page = requests.get(self.URL, headers=self.headers)
+        page = requests.get(self.url, headers=self.headers)
         soup1 = BeautifulSoup(page.content, 'html.parser')  # Need to do this twice for amazon.com
         soup2 = BeautifulSoup(soup1.prettify(), 'html.parser')
         return soup2
 
     def __get_camel_url(self):
-        url = self.get_url()
+        url = self.url
         limit1 = 0
         limit2 = 0
         for x in range(22, len(url)):
@@ -64,13 +64,8 @@ class AmazonItem:
         return float(price[1:])
 
     def __get_price(self):
-        return float(self.soup.find(id="priceblock_ourprice").get_text()[1:])
+        return float(self.amazon_soup.find(id="priceblock_ourprice").get_text()[1:])
 
     def __get_title(self):
-        return self.amazon_soup.find(id="productTitle").get_text()
-
-
-    def __get_url(self): # TODO you probably don't need this.
-        return self.url
-
+        return self.amazon_soup.find(id="productTitle").get_text().strip()
 
