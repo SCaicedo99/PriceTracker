@@ -2,7 +2,6 @@ from bs4 import BeautifulSoup
 import requests
 # TODO maybe think about how many different websites this app will work on, and how they are going to be parsed. \
 # TODO because some things need to be hardcoded
-# TODO I can make some methods private, i.e self.get_camel_soup()
 
 
 class AmazonItem:
@@ -14,7 +13,7 @@ class AmazonItem:
         self.camel_soup = self.__get_camel_soup(self.__get_camel_url())
         self.title = self.__get_title()
         self.current_price = self.__get_price()
-        self.highest_price = self.__get_highest_price()
+        # self.highest_price = self.__get_highest_price()
         self.highest_price_date = self.__get_highest_price_date()
         self.lowest_price = self.__get_lowest_price()
         self.lowest_price_date = self.__get_lowest_price_date()
@@ -29,10 +28,11 @@ class AmazonItem:
     def __get_camel_url(self):
         url = self.url
         limit1 = 0
-        limit2 = 0
+        limit2 = len(self.url)
         for x in range(22, len(url)):
-            if(url[x]+url[x+1]) == 'dp':
-                limit1 = x
+            if x+1 < len(url):
+                if(url[x]+url[x+1]) == 'dp':
+                    limit1 = x
             if url[x] == '?':
                 limit2 = x
                 break
@@ -45,6 +45,7 @@ class AmazonItem:
 
     def __get_highest_price(self):
         price = self.camel_soup.find(class_='highest_price').contents[3].get_text()
+        print(price)
         return float(price[1:])
 
     def __get_highest_price_date(self):
@@ -56,12 +57,25 @@ class AmazonItem:
         return float(price[1:])
 
     def __get_lowest_price_date(self):
-        date = self.camel_soup.find(class_='lowest_price').contents[5].get_text()
-        return date
+        price_date = self.camel_soup.find(class_="product_pane").contents[3]
+        print(price_date)
+        # This makes sure there exists an avg price by checking that the tag element
+        # has a length > 3.
+        # if len(price_date) > 3:
+        #     price = price_date.contents[7].contents[3].get_text()[1:]
+        #     return price
+        return "N/A"
+        # date = self.camel_soup.find(class_='lowest_price').contents[5].get_text()
+        # return date
 
     def __get_avg_price(self):
-        price = self.camel_soup.find(class_="product_pane").contents[3].contents[7].contents[3].get_text()
-        return float(price[1:])
+        price = self.camel_soup.find(class_="product_pane").contents[3]
+        # This makes sure there exists an avg price by checking that the tag element
+        # has a length > 3.
+        if len(price) > 3:
+            price = price.contents[7].contents[3].get_text()[1:]
+            return price
+        return -1
 
     def __get_price(self):
         return float(self.amazon_soup.find(id="priceblock_ourprice").get_text()[1:])

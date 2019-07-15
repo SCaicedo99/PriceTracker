@@ -1,0 +1,26 @@
+Week of Jul 7:
+- I just watched a video on youtube that inspired me to expand it, so I'll give it a try.
+I took the code that was on the video and will be changing it to meet my needs and other
+ideas that I might get.
+- Decided that I will be creating classes for each website, for now there is only one class
+which is AmazonItem which only needs the amazon URL to be instantiated.
+- Just got the idea of using the website camelcamel.com to find about an item's price history
+on amazon.com
+
+Week of Jul 14:
+- After implementing all of the attributes (so far) needed for AmazonItem, using a single url
+I am thinking of trying it with different urls, and I have encountered some problems, some urls
+have different syntax on how they display the price on amazon, so it created an issue when trying
+to use the function for that.
+Also, I have realized that some items were not sold being sold by amazon but by other sellers
+this means that camelcamel.com does not have the data for highest/lowest price by amazon, which
+also creates some problems with my current functions. Need to work on that
+
+--- Create a user story (200 words), describe why people need your product, what benefits
+can it bring to other people
+--- Succesfull criteria, what functionality do you expect your product to have
+list 5-7 functions my project can provide
+--- Structure diagram / User flow diagram for the project. the steps that a user will
+take to use the program
+--- Documentation ( it can wait for now), while you're working on the project
+remember 3 highlights.

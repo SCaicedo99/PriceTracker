@@ -4,8 +4,7 @@ from bs4 import BeautifulSoup
 import smtplib  # This is just a protocol that sends emails
 from item import AmazonItem  # Items object which will contain its information (price)
 
-URL = 'https://www.amazon.com/BIC-Round-Ballpoint-Medium-60-Count/dp/B0012YVGOW?ref_=Oct_' \
-      'DLandingS_PC_6a44c109_0&smid=ATVPDKIKX0DER&th=1&psc=1'
+URL = 'https://www.amazon.com/BIC-Round-Ballpoint-Medium-60-Count/dp/B0012YVGOW?'
 
 headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                          '(KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'}
@@ -58,8 +57,8 @@ temp = AmazonItem(URL)
 # print(type(test.find(id='histories')))
 # x = test.find(class_='lowest_price').contents[5].contents[0]
 # x = temp.amazon_soup.find(id="productTitle")
-x = temp.title
-print(x)
+x = temp
+# print(x.highest_price)
 # print(temp.strip_str_to_float(x))
 
 
