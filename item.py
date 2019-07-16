@@ -13,11 +13,12 @@ class AmazonItem:
         self.camel_soup = self.__get_camel_soup(self.__get_camel_url())
         self.title = self.__get_title()
         self.current_price = self.__get_price()
-        # self.highest_price = self.__get_highest_price()
+        self.highest_price = self.__get_highest_price()
         self.highest_price_date = self.__get_highest_price_date()
         self.lowest_price = self.__get_lowest_price()
         self.lowest_price_date = self.__get_lowest_price_date()
         self.avg_price = self.__get_avg_price()
+        self.availability = self.__get_availability()
 
     def __get_soup(self):
         page = requests.get(self.url, headers=self.headers)
@@ -45,7 +46,7 @@ class AmazonItem:
 
     def __get_highest_price(self):
         price = self.camel_soup.find(class_='highest_price').contents[3].get_text()
-        print(price)
+        # print(price)
         return float(price[1:])
 
     def __get_highest_price_date(self):
@@ -58,12 +59,12 @@ class AmazonItem:
 
     def __get_lowest_price_date(self):
         price_date = self.camel_soup.find(class_="product_pane").contents[3]
-        print(price_date)
+        # print(price_date)
         # This makes sure there exists an avg price by checking that the tag element
         # has a length > 3.
-        # if len(price_date) > 3:
-        #     price = price_date.contents[7].contents[3].get_text()[1:]
-        #     return price
+        if len(price_date) > 3:
+            return price_date.contents[5].contents[5].get_text()
+            # return price
         return "N/A"
         # date = self.camel_soup.find(class_='lowest_price').contents[5].get_text()
         # return date
@@ -78,8 +79,26 @@ class AmazonItem:
         return -1
 
     def __get_price(self):
+        # Some items have special price boxes, so this should take care of that
+        if self.amazon_soup.find(id="newPitchPrice") is not None:
+            dollars = float(self.amazon_soup.find(id="newPitchPrice").find(class_="price-large").get_text().strip())
+            cents = float(self.amazon_soup.find(id="newPitchPrice")
+                          .find_all(class_="a-size-small price-info-superscript")[1].get_text().strip())/100
+            return dollars + cents
         return float(self.amazon_soup.find(id="priceblock_ourprice").get_text()[1:])
 
     def __get_title(self):
         return self.amazon_soup.find(id="productTitle").get_text().strip()
+
+    def __get_availability(self): # TODO implement this function correctly
+        x = self.amazon_soup.find(id='availability').content
+        print(x)
+        return -1
+
+    def to_string(self): # Just for debugging purposes.
+        print(self.title)
+        print("Current price = $", self.current_price)
+        print("Highest price = $", self.highest_price, "\t", self.highest_price_date)
+        print("Lowest price = $", self.lowest_price, "\t", self.lowest_price_date)
+        print("Average price = $", self.avg_price)
 
