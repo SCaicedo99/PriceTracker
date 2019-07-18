@@ -6,6 +6,7 @@ from item import AmazonItem  # Items object which will contain its information (
 
 URL = 'https://www.amazon.com/Sony-Alpha-a6400-Mirrorless-Camera/dp/B07MV3P7M8'
 
+
 headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                          '(KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'}
 
@@ -60,7 +61,7 @@ temp = AmazonItem(URL)
 x = temp
 # print(x.lowest_price_date)
 x.to_string()
-# print(temp.strip_str_to_float(x))
+# print(x)
 
 
 

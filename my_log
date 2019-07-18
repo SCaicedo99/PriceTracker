@@ -19,7 +19,7 @@ also creates some problems with my current functions. Need to work on that
 - Amazon.com has different ways of displaying its prices, and that sometimes breaks the code
 this means that I have to look around and see how many different ways Amazon displays its prices
 and make my code robust enough so it doesn't break, and it still shows usable information to the user
-Some items have availability information ( X items left, order soon) so I need to also cover that 
+Some items have availability information ( X items left, order soon) so I need to also cover that
 
 
 
