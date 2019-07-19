@@ -4,13 +4,15 @@ from bs4 import BeautifulSoup
 import smtplib  # This is just a protocol that sends emails
 from item import AmazonItem  # Items object which will contain its information (price)
 
-URL = 'https://www.amazon.com/Sony-Alpha-a6400-Mirrorless-Camera/dp/B07MV3P7M8'
+URL = 'https://www.amazon.com/dp/B01LOP8EZC?th=1'
+
 
 
 headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                          '(KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'}
 
 page = requests.get(URL, headers=headers)
+
 
 def check_price():
     # because amazon.com is written in javascript, I need to do this twice so I can access the elements I need

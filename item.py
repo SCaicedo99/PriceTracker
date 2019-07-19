@@ -52,13 +52,11 @@ class AmazonItem:
 
     def __get_highest_price_date(self):
         date = self.camel_soup.find(class_='product_pane').find(class_='highest_price')
-        # print(date.contents[5])
         if date is not None:
             return date.contents[5].get_text()
         return "N/A"
 
     def __get_lowest_price(self):
-        # price = self.camel_soup.find(class_='lowest_price').contents[3].get_text()
         price = self.camel_soup.find(class_='product_pane').find(class_='lowest_price')
         if price is not None:
             return self.__str_to_float(price.contents[3].get_text())
@@ -69,39 +67,57 @@ class AmazonItem:
         if price_date is not None:
             return price_date.contents[5].get_text()
         return "N/A"
-        # date = self.camel_soup.find(class_='lowest_price').contents[5].get_text()
-        # return date
 
-    def __get_avg_price(self):  # TODO finish this function
+    def __get_avg_price(self):
         price = self.camel_soup.find(class_="product_pane").contents[3]
-        # print price()
+        if len(price) > 3:
+            price = price.contents[7].contents[3].get_text()
+            return self.__str_to_float(price)
         return -1
 
     def __get_price(self):
-        # Some items have special price boxes, so this should take care of that
-        if self.amazon_soup.find(id="newPitchPrice") is not None:
-            dollars = float(self.amazon_soup.find(id="newPitchPrice").find(class_="price-large").get_text().strip())
-            cents = float(self.amazon_soup.find(id="newPitchPrice")
-                          .find_all(class_="a-size-small price-info-superscript")[1].get_text().strip())/100
-            return dollars + cents
-        return float(self.amazon_soup.find(id="priceblock_ourprice").get_text()[1:])
+        # Some items have special price boxes, so this should take care of that (this seems to happen)
+        # when there is an item that is shipped outside of the US
+        new_pitch_price = self.amazon_soup.find(id="newPitchPrice")
+        if new_pitch_price is not None:
+            dollars = new_pitch_price.find(class_="price-large").get_text().strip()
+            cents = new_pitch_price.find(id="newPitchPrice")\
+                          .find_all(class_="a-size-small price-info-superscript")[1].get_text().strip()
+            return self.__str_to_float(dollars) + self.__str_to_float(cents)/100
+        pos_promo_pitch_price = self.amazon_soup.find(id="posPromoPitchPrice")
+        if pos_promo_pitch_price is not None:
+            dollars = pos_promo_pitch_price.find(class_="a-section a-spacing-none").find(class_="price-large")\
+                                        .get_text().strip()
+            cents = pos_promo_pitch_price.find(class_="a-section a-spacing-none")\
+                                        .find_all(class_="a-size-small price-info-superscript")[1].get_text().strip()
+
+            return self.__str_to_float(dollars)+(self.__str_to_float(cents)/100)
+        # if self.amazon.find(.contents/
+        # price = self.amazon_soup.find(id="priceblock_ourprice").get_text()
+        # return self.__str_to_float(price)
+        return -1
 
     def __get_title(self):
         return self.amazon_soup.find(id="productTitle").get_text().strip()
 
     def __get_availability(self): # TODO implement this function correctly
-        x = self.amazon_soup.find(id='availability').content
-        print(x)
-        return -1
+        avail = self.amazon_soup.find(id="availabilityInsideBuyBox_feature_div")
+        if avail is not None:
+            avail = avail.find(id='availability')
+            if avail is not None:
+                return avail.get_text().strip()
 
-    def __str_to_float(self, s):  # This function will convert a string
+        # print("current avail : ",x)
+        return None
+
+    def __str_to_float(self, s):  # This function will convert a string to a float
         s = s.replace('$', '')
         return float(s.replace(',', ''))
 
-    def to_string(self): # Just for debugging purposes.
+    def to_string(self):  # Just for debugging purposes.
         print(self.title)
         print("Current price = $", self.current_price)
         print("Highest price = $", self.highest_price, "\t", self.highest_price_date)
         print("Lowest price = $", self.lowest_price, "\t", self.lowest_price_date)
         print("Average price = $", self.avg_price)
-
+        print("Current availability notes " , self.availability)

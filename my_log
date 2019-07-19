@@ -21,6 +21,10 @@ this means that I have to look around and see how many different ways Amazon dis
 and make my code robust enough so it doesn't break, and it still shows usable information to the user
 Some items have availability information ( X items left, order soon) so I need to also cover that
 
+- Thought that I am also going to need to check for availability, so this will need a function for that
+
+
+
 
 
 --- Create a user story (200 words), describe why people need your product, what benefits
