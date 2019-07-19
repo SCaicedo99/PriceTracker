@@ -81,7 +81,7 @@ class AmazonItem:
         new_pitch_price = self.amazon_soup.find(id="newPitchPrice")
         if new_pitch_price is not None:
             dollars = new_pitch_price.find(class_="price-large").get_text().strip()
-            cents = new_pitch_price.find(id="newPitchPrice")\
+            cents = new_pitch_price\
                           .find_all(class_="a-size-small price-info-superscript")[1].get_text().strip()
             return self.__str_to_float(dollars) + self.__str_to_float(cents)/100
         pos_promo_pitch_price = self.amazon_soup.find(id="posPromoPitchPrice")
@@ -92,10 +92,8 @@ class AmazonItem:
                                         .find_all(class_="a-size-small price-info-superscript")[1].get_text().strip()
 
             return self.__str_to_float(dollars)+(self.__str_to_float(cents)/100)
-        # if self.amazon.find(.contents/
-        # price = self.amazon_soup.find(id="priceblock_ourprice").get_text()
-        # return self.__str_to_float(price)
-        return -1
+        price = self.amazon_soup.find(id="priceblock_ourprice").get_text()
+        return self.__str_to_float(price)
 
     def __get_title(self):
         return self.amazon_soup.find(id="productTitle").get_text().strip()
@@ -103,7 +101,7 @@ class AmazonItem:
     def __get_availability(self): # TODO implement this function correctly
         avail = self.amazon_soup.find(id="availabilityInsideBuyBox_feature_div")
         if avail is not None:
-            avail = avail.find(id='availability')
+            avail = avail.find(id='availability').find(class_="a-size-medium a-color-state")
             if avail is not None:
                 return avail.get_text().strip()
 

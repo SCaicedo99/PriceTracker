@@ -4,7 +4,8 @@ from bs4 import BeautifulSoup
 import smtplib  # This is just a protocol that sends emails
 from item import AmazonItem  # Items object which will contain its information (price)
 
-URL = 'https://www.amazon.com/dp/B01LOP8EZC?th=1'
+URL = 'https://www.amazon.com/Sony-Alpha-a6400-Mirrorless-Camera/dp/B07MV3P7M8'
+
 
 
 
