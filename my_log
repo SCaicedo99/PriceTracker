@@ -23,6 +23,11 @@ Some items have availability information ( X items left, order soon) so I need t
 
 - Thought that I am also going to need to check for availability, so this will need a function for that
 
+Week of Jul 21:
+-I am starting to look for different libraries that will help to make the GUI, the two candidates
+at the moment are WxPython and Tkinter. Decided to use Tkinter for this project.
+
+
 
 
 
@@ -35,5 +40,7 @@ list 5-7 functions my project can provide
 take to use the program
 --- Documentation ( it can wait for now), while you're working on the project
 remember 3 highlights.
+
+
 
 

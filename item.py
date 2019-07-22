@@ -26,18 +26,12 @@ class AmazonItem:
         soup2 = BeautifulSoup(soup1.prettify(), 'html.parser')
         return soup2
 
-    def __get_camel_url(self):  # TODO this function may be optimized with the .replace method
+    def __get_camel_url(self):
         url = self.url
-        limit1 = 0
-        limit2 = len(self.url)
-        for x in range(22, len(url)):
-            if x+1 < len(url):
-                if(url[x]+url[x+1]) == 'dp':
-                    limit1 = x
-            if url[x] == '?':
-                limit2 = x
-                break
-        return 'https://camelcamelcamel.com' + url[22:limit1] + 'product' + url[limit1+2:limit2]
+        lim = url.find('?')
+        if lim != -1:
+            return 'https://camelcamelcamel.com' + url[22:lim].replace('/dp', '/product/')
+        return 'https://camelcamelcamel.com' + url[22:].replace('/dp', '/product/')
 
     def __get_camel_soup(self, url):
         camel_page = requests.get(url, headers=self.headers)
@@ -98,14 +92,12 @@ class AmazonItem:
     def __get_title(self):
         return self.amazon_soup.find(id="productTitle").get_text().strip()
 
-    def __get_availability(self): # TODO implement this function correctly
+    def __get_availability(self):
         avail = self.amazon_soup.find(id="availabilityInsideBuyBox_feature_div")
         if avail is not None:
             avail = avail.find(id='availability').find(class_="a-size-medium a-color-state")
             if avail is not None:
                 return avail.get_text().strip()
-
-        # print("current avail : ",x)
         return None
 
     def __str_to_float(self, s):  # This function will convert a string to a float
