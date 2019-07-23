@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 import smtplib  # This is just a protocol that sends emails
 from item import AmazonItem  # Items object which will contain its information (price)
 
+
+
 URL = 'https://www.amazon.com/Sony-Alpha-a6400-Mirrorless-Camera/dp/B07MV3P7M8'
 
 
@@ -56,15 +58,31 @@ def send_mail():
 
 
 # check_price()
-temp = AmazonItem(URL)
+# temp = AmazonItem('https://www.amazon.com/Bose-QuietComfort-Wireless-Headphones-Cancelling/dp/B0756CYWWD')
 # test = temp.camel_soup
 # print(type(test.find(id='histories')))
 # x = test.find(class_='lowest_price').contents[5].contents[0]
 # x = temp.amazon_soup.find(id="productTitle")
-x = temp
+# x = temp
 # print(x.lowest_price_date)
-x.to_string()
+# x.to_string()
 # print(x)
 
+
+amazon_file = open("amazon_urls.txt", "r+")
+amazon_urls = amazon_file.readlines()
+#
+arr = []
+i = 0
+# TODO fix the weird bug when parsing through the text file sometimes it does not show historic information
+for url in amazon_urls:
+    arr.append(AmazonItem(url))
+    # arr[i].to_string()
+    i += 1
+    print('=================================================')
+# print(arr[2].camel_soup)
+
+    # print(url)
+amazon_file.close()
 
 

@@ -5,12 +5,18 @@ import requests
 
 
 class AmazonItem:
+    # def __new__(cls,url):
+    #     instance = super(AmazonItem, cls).__new__(cls, url)
+    #     return instance
+
     def __init__(self, url):
         self.url = url
         self.headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                         '(KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'}
         self.amazon_soup = self.__get_soup()
         self.camel_soup = self.__get_camel_soup(self.__get_camel_url())
+        if self.camel_soup.find(class_="product_pane") is not None:
+            print(True)
         self.title = self.__get_title()
         self.current_price = self.__get_price()
         self.highest_price = self.__get_highest_price()
@@ -19,6 +25,8 @@ class AmazonItem:
         self.lowest_price_date = self.__get_lowest_price_date()
         self.avg_price = self.__get_avg_price()
         self.availability = self.__get_availability()
+
+
 
     def __get_soup(self):
         page = requests.get(self.url, headers=self.headers)
@@ -35,38 +43,50 @@ class AmazonItem:
 
     def __get_camel_soup(self, url):
         camel_page = requests.get(url, headers=self.headers)
-        soup = BeautifulSoup(camel_page.content, 'html.parser')
+        soup1 = BeautifulSoup(camel_page.content, 'html.parser')
+        soup = BeautifulSoup(soup1.prettify(), 'html.parser')
         return soup
 
     def __get_highest_price(self):
-        price = self.camel_soup.find(class_='product_pane').find(class_='highest_price')
-        if price is not None:
-            return self.__str_to_float(price.contents[3].get_text())
+        product_pane = self.camel_soup.find(class_='product_pane')
+        # print(product_pane)
+        if product_pane is not None:
+            price = product_pane.find(class_='highest_price')
+            if price is not None:
+                return self.__str_to_float(price.contents[3].get_text())
         return -1
 
     def __get_highest_price_date(self):
-        date = self.camel_soup.find(class_='product_pane').find(class_='highest_price')
-        if date is not None:
-            return date.contents[5].get_text()
+        product_pane = self.camel_soup.find(class_='product_pane')
+        if product_pane is not None:
+            date = product_pane.find(class_='highest_price')
+            if date is not None:
+                return date.contents[5].get_text()
         return "N/A"
 
     def __get_lowest_price(self):
-        price = self.camel_soup.find(class_='product_pane').find(class_='lowest_price')
-        if price is not None:
-            return self.__str_to_float(price.contents[3].get_text())
+        product_pane = self.camel_soup.find(class_='product_pane')
+        if product_pane is not None:
+            price = product_pane.find(class_='lowest_price')
+            if price is not None:
+                return self.__str_to_float(price.contents[3].get_text())
         return -1
 
     def __get_lowest_price_date(self):
-        price_date = self.camel_soup.find(class_="product_pane").find(class_='lowest_price')
-        if price_date is not None:
-            return price_date.contents[5].get_text()
+        product_pane = self.camel_soup.find(class_="product_pane")
+        if product_pane is not None:
+            price_date = product_pane.find(class_='lowest_price')
+            if price_date is not None:
+                return price_date.contents[5].get_text()
         return "N/A"
 
     def __get_avg_price(self):
-        price = self.camel_soup.find(class_="product_pane").contents[3]
-        if len(price) > 3:
-            price = price.contents[7].contents[3].get_text()
-            return self.__str_to_float(price)
+        product_pane = self.camel_soup.find(class_="product_pane")
+        if product_pane is not None:
+            product_pane = product_pane.contents[3]
+            if len(product_pane) > 3:
+                price = product_pane.contents[7].contents[3].get_text()
+                return self.__str_to_float(price)
         return -1
 
     def __get_price(self):
