@@ -75,7 +75,6 @@ amazon_urls = amazon_file.readlines()
 #
 arr = []
 i = 0
-# TODO fix the weird bug when parsing through the text file sometimes it does not show historic information
 for url in amazon_urls:
     arr.append(AmazonItem(url))
     arr[i].to_string()
