@@ -38,8 +38,8 @@ class AmazonItem:
         url = self.url
         lim = url.find('?')
         if lim != -1:
-            return 'https://camelcamelcamel.com' + url[22:lim].replace('/dp', '/product/')
-        return 'https://camelcamelcamel.com' + url[22:].replace('/dp', '/product/')
+            return 'https://camelcamelcamel.com' + url[22:lim].replace('/dp', '/product/').strip()
+        return 'https://camelcamelcamel.com' + url[22:].replace('/dp', '/product/').strip()
 
     def __get_camel_soup(self, url):
         camel_page = requests.get(url, headers=self.headers)

@@ -26,6 +26,9 @@ Some items have availability information ( X items left, order soon) so I need t
 Week of Jul 21:
 -I am starting to look for different libraries that will help to make the GUI, the two candidates
 at the moment are WxPython and Tkinter. Decided to use Tkinter for this project.
+- I have found this weird bug that whenever I try parsing through the amazon_urls.txt file, as I parse it, I create a
+new instance of AmazonItem, but for some of the urls it is not retrieving the camelcamel historic information, but if I
+do it without using a loop, there is no problem. FIXED IT,
 
 
 
