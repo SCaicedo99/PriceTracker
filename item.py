@@ -15,9 +15,7 @@ class AmazonItem:
                         '(KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'}
         self.amazon_soup = self.__get_soup()
         self.camel_soup = self.__get_camel_soup(self.__get_camel_url())
-        print(self.__get_camel_url())
-        # if self.camel_soup.find(class_="product_pane") is not None:
-        #     print(True)
+
         self.title = self.__get_title()
         self.current_price = self.__get_price()
         self.highest_price = self.__get_highest_price()
