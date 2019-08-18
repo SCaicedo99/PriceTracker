@@ -31,6 +31,9 @@ new instance of AmazonItem, but for some of the urls it is not retrieving the ca
 do it without using a loop, there is no problem. FIXED IT,
 
 
+Week of Aug 11:
+- Picked up the project again, started working on the GUI, still trying to figure out how to display the information
+since there is not a table implemented with tkinter, so I will have to come up with my own implementation
 
 
 
