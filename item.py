@@ -15,8 +15,9 @@ class AmazonItem:
                         '(KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'}
         self.amazon_soup = self.__get_soup()
         self.camel_soup = self.__get_camel_soup(self.__get_camel_url())
-        if self.camel_soup.find(class_="product_pane") is not None:
-            print(True)
+        print(self.__get_camel_url())
+        # if self.camel_soup.find(class_="product_pane") is not None:
+        #     print(True)
         self.title = self.__get_title()
         self.current_price = self.__get_price()
         self.highest_price = self.__get_highest_price()
@@ -26,8 +27,6 @@ class AmazonItem:
         self.avg_price = self.__get_avg_price()
         self.availability = self.__get_availability()
 
-
-
     def __get_soup(self):
         page = requests.get(self.url, headers=self.headers)
         soup1 = BeautifulSoup(page.content, 'html.parser')  # Need to do this twice for amazon.com
@@ -36,10 +35,10 @@ class AmazonItem:
 
     def __get_camel_url(self):
         url = self.url
-        lim = url.find('?')
+        lim = url.find('/dp/')
         if lim != -1:
-            return 'https://camelcamelcamel.com' + url[22:lim].replace('/dp', '/product/').strip()
-        return 'https://camelcamelcamel.com' + url[22:].replace('/dp', '/product/').strip()
+            return 'https://camelcamelcamel.com' + url[22:lim+14].replace('/dp', '/product').strip()
+        return 'https://camelcamelcamel.com' + url[22:].replace('/dp', '/product').strip()
 
     def __get_camel_soup(self, url):
         camel_page = requests.get(url, headers=self.headers)
@@ -61,7 +60,7 @@ class AmazonItem:
         if product_pane is not None:
             date = product_pane.find(class_='highest_price')
             if date is not None:
-                return date.contents[5].get_text()
+                return date.contents[5].get_text().strip()
         return "N/A"
 
     def __get_lowest_price(self):
@@ -77,7 +76,7 @@ class AmazonItem:
         if product_pane is not None:
             price_date = product_pane.find(class_='lowest_price')
             if price_date is not None:
-                return price_date.contents[5].get_text()
+                return price_date.contents[5].get_text().strip()
         return "N/A"
 
     def __get_avg_price(self):
@@ -118,7 +117,7 @@ class AmazonItem:
             avail = avail.find(id='availability').find(class_="a-size-medium a-color-state")
             if avail is not None:
                 return avail.get_text().strip()
-        return None
+        return "Available"
 
     def __str_to_float(self, s):  # This function will convert a string to a float
         s = s.replace('$', '')
