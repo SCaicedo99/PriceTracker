@@ -61,8 +61,9 @@ class NewSession(tk.Frame):
         self.controller = controller
         table = TableOfItems(self, controller)
         table.grid(row=0, column=0, rowspan=2, columnspan=2)
+        tree = table.get_tree()
 
-        buttons = ActionButtons(self, controller)
+        buttons = ActionButtons(self, controller, tree)
         buttons.grid(row=0, column=3, rowspan=10, columnspan=3)
 
 
@@ -73,23 +74,23 @@ class OldSession(tk.Frame):
 
         table = TableOfItems(self, controller=controller, file="amazon_urls.txt")
         table.grid(row=0, column=0, rowspan=2, columnspan=2)
+        tree = table.get_tree()
 
-        buttons = ActionButtons(self, controller)
+        buttons = ActionButtons(self, controller, tree)
         buttons.grid(row=0, column=3, rowspan=10, columnspan=3)
 
 
 class TableOfItems(tk.Frame):
     def __init__(self, parent, controller, file=None):
         tk.Frame.__init__(self, parent, background="black")
-        tree = ttk.Treeview(self)
-        tree["columns"]=("Price", "two")
-        tree.column("Price", width=100)
-        tree.column("two", width=100)
-        tree.heading("Price", text="Price ($)")
-        tree.pack(side="left")
-        vsb = ttk.Scrollbar(self, orient="vertical", command=tree.yview)
+        self.tree = ttk.Treeview(self)
+        self.tree["columns"]=("Price", "two")
+        self.tree.column("Price", width=100)
+        self.tree.column("two", width=100)
+        self.tree.heading("Price", text="Price ($)")
+        self.tree.pack(side="left")
+        vsb = ttk.Scrollbar(self, orient="vertical", command=self.tree.yview)
         vsb.pack(side="right", fill="y")
-
         if file is not None:
             parse_file = open(file, 'r+').readlines()
             items = {}
@@ -99,37 +100,80 @@ class TableOfItems(tk.Frame):
                 items[temp.title] = temp
 
             for key in items:
-                temp = tree.insert("", "end", items[key].title, text=items[key].title,
+                temp = self.tree.insert("", "end", items[key].title, text=items[key].title,
                                    values=("${:.2f}".format(items[key].current_price)))
-                tree.insert(temp, "end", text="Highest Price",
+                self.tree.insert(temp, "end", text="Highest Price",
                             values=("${:.2f}".format(items[key].highest_price),
                                     items[key].highest_price_date))
-                tree.insert(temp, "end", text="Lowest Price",
+                self.tree.insert(temp, "end", text="Lowest Price",
                             values=("${:.2f}".format(items[key].lowest_price),
                                     items[key].lowest_price_date))
-                tree.insert(temp, "end", text="Average Price",
+                self.tree.insert(temp, "end", text="Average Price",
                             values=("${:.2f}".format(items[key].avg_price)))
-                tree.insert(temp, "end", text="Availability",
+                self.tree.insert(temp, "end", text="Availability",
                             values=items[key].availability)
                 # indx += 1
         else:
             pass
 
+    def get_tree(self):
+        return self.tree
+
 
 
 class ActionButtons(tk.Frame):
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller, tree):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        button1 = ttk.Button(self, text="Add Item")
-        button2 = ttk.Button(self, text="Delete Item")
+        self.tree = tree
+        button1 = ttk.Button(self, text="Add Item", command=lambda: self.testing)
+        button2 = ttk.Button(self, text="Delete Item", command=lambda: self.delete_tree_item())
         button3 = ttk.Button(self, text="Send Email")
         button4 = ttk.Button(self, text="Back", command=lambda: controller.show_frame("WelcomePage"))
+        v = tk.StringVar()
+
+        self.entry = tk.Entry(self, textvariable=v)
+        v.set("enter url here")
+        print(self.entry.get())
 
         button1.grid(row=0, column=0, padx=5, pady=5)
         button2.grid(row=1, column=0, padx=5, pady=5)
         button3.grid(row=2, column=0, padx=5, pady=5)
         button4.grid(row=3, column=0, padx=5, pady=5)
+        self.entry.grid(row=0, column=1, padx=5, pady=5)
+        print("got here")
+
+    def delete_tree_item(self):
+        try:
+            self.tree.delete(self.tree.selection()[0])
+        except IndexError:
+            pass
+
+    def testing(self):
+        print(self.entry.get())
+
+    def add_item(self):
+        print("Trying to add item")
+        if self.entry.get().find("amazon.com") != -1:  # Just making sure it's an amazon link
+            print("adding item...")
+            item = AmazonItem(self.entry.get().strip())
+            self.entry.delete(0, tk.END)
+            temp = self.tree.insert("", "end", item.title, text=item.title,
+                                    values=("${:.2f}".format(item.current_price)))
+            self.tree.insert(temp, "end", text="Highest Price",
+                             values=("${:.2f}".format(item.highest_price),
+                                     item.highest_price_date))
+            self.tree.insert(temp, "end", text="Lowest Price",
+                             values=("${:.2f}".format(item.lowest_price),
+                                     item.lowest_price_date))
+            self.tree.insert(temp, "end", text="Average Price",
+                             values=("${:.2f}".format(item.avg_price)))
+            self.tree.insert(temp, "end", text="Availability",
+                             values=item.availability)
+        else:
+            pass
+
+
 
 
 class Menus:
