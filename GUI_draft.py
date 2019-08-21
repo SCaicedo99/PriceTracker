@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import font as tkfont
 from item import AmazonItem
+import threading
 
 
 def doNothing():
@@ -16,27 +17,55 @@ class Driver(tk.Tk):
         tk.Tk.iconbitmap(self, default='icon.ico')
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight='bold', slant='italic')
         self.col_font = tkfont.Font(family='Helvetica', size=10, weight='bold')
-        container = tk.Frame(self, relief='raised', borderwidth=5)
-        container.pack(side="top", fill="both", expand=True)
-        container.grid_rowconfigure(1, weight=1)
-        container.grid_columnconfigure(0, weight=1)
+        self.container = tk.Frame(self, relief='raised', borderwidth=5)
+        self.container.pack(side="top", fill="both", expand=True)
+        self.container.grid_rowconfigure(1, weight=1)
+        self.container.grid_columnconfigure(0, weight=1)
+
 
 
         self.frames = {}
 
-        self.frames["WelcomePage"] = WelcomePage(parent=container, controller=self)
-        self.frames["NewSession"] = NewSession(parent=container, controller=self)
-        self.frames["OldSession"] = OldSession(parent=container, controller=self)
+        self.frames["WelcomePage"] = WelcomePage(parent=self.container, controller=self)
+        self.frames["LoadingScreen"] = LoadingScreen(parent=self.container, controller=self)
 
         self.frames["WelcomePage"].grid(row=1, column=0, sticky="nsew")
-        self.frames["NewSession"].grid(row=1, column=0, sticky="nsew")
-        self.frames["OldSession"].grid(row=1, column=0, sticky="nsew")
+        self.frames["LoadingScreen"].grid(row=1, column=0, sticky="nsew")
 
         self.show_frame("WelcomePage")
 
     def show_frame(self, page_name):
         frame = self.frames[page_name]
         frame.tkraise()
+
+    def init_new_session(self):
+        if 'NewSession' not in self.frames:
+            self.frames["NewSession"] = NewSession(parent=self.container, controller=self)
+            self.frames["NewSession"].grid(row=1, column=0, sticky="nsew")
+        else:
+            self.show_frame("NewSession")
+
+    def init_old_session(self):
+        if 'OldSession' not in self.frames:
+            self.frames["OldSession"]
+        else:
+            self.show_frame("OldSession")
+
+
+class LoadingScreen(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+        label = tk.Label(self, text="Loading...", font=controller.title_font)
+        label.pack(side="top", fill="x", pady=10)
+        self.progress_bar = ttk.Progressbar(self, orient="horizontal", mode="indeterminate")
+        self.progress_bar.pack(expand="True", fill="x", side=tk.TOP)
+
+    def start_bar(self):
+        self.progress_bar.start(50)
+
+    def stop_bar(self):
+        self.progress_bar.stop()
 
 
 class WelcomePage(tk.Frame):
@@ -48,11 +77,14 @@ class WelcomePage(tk.Frame):
         label.pack(side="top", fill="x", pady=10)
 
         button1 = ttk.Button(self, text="New Session",
-                             command=lambda: controller.show_frame("NewSession"))
+                             command=controller.init_new_session)
         button2 = ttk.Button(self, text='Old Session',
-                             command=lambda: controller.show_frame("OldSession"))
+                             command=controller.init_old_session)
+        button3 = ttk.Button(self, text="Show loading screen",
+                             command=lambda: controller.show_frame("LoadingScreen"))
         button1.pack()
         button2.pack()
+        button3.pack()
 
 
 class NewSession(tk.Frame):
@@ -79,6 +111,9 @@ class OldSession(tk.Frame):
         buttons = ActionButtons(self, controller, tree)
         buttons.grid(row=0, column=3, rowspan=10, columnspan=3)
 
+        controller.frames["OldSession"] = self
+        controller.frames["OldSession"].grid(row=1, column=0, sticky="nsew")
+
 
 class TableOfItems(tk.Frame):
     def __init__(self, parent, controller, file=None):
@@ -100,25 +135,27 @@ class TableOfItems(tk.Frame):
                 items[temp.title] = temp
 
             for key in items:
-                temp = self.tree.insert("", "end", items[key].title, text=items[key].title,
-                                   values=("${:.2f}".format(items[key].current_price)))
-                self.tree.insert(temp, "end", text="Highest Price",
-                            values=("${:.2f}".format(items[key].highest_price),
-                                    items[key].highest_price_date))
-                self.tree.insert(temp, "end", text="Lowest Price",
-                            values=("${:.2f}".format(items[key].lowest_price),
-                                    items[key].lowest_price_date))
-                self.tree.insert(temp, "end", text="Average Price",
-                            values=("${:.2f}".format(items[key].avg_price)))
-                self.tree.insert(temp, "end", text="Availability",
-                            values=items[key].availability)
-                # indx += 1
+                temp_thread = threading.Thread(target=self.pop_tree, args=(items[key],))
+                temp_thread.start()
         else:
             pass
 
+    def pop_tree(self, item):
+        temp = self.tree.insert("", "end", item.title, text=item.title,
+                                values=("${:.2f}".format(item.current_price)))
+        self.tree.insert(temp, "end", text="Highest Price",
+                         values=("${:.2f}".format(item.highest_price),
+                                 item.highest_price_date))
+        self.tree.insert(temp, "end", text="Lowest Price",
+                         values=("${:.2f}".format(item.lowest_price),
+                                 item.lowest_price_date))
+        self.tree.insert(temp, "end", text="Average Price",
+                         values=("${:.2f}".format(item.avg_price)))
+        self.tree.insert(temp, "end", text="Availability",
+                         values=item.availability)
+
     def get_tree(self):
         return self.tree
-
 
 
 class ActionButtons(tk.Frame):
@@ -126,22 +163,21 @@ class ActionButtons(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
         self.tree = tree
-        button1 = ttk.Button(self, text="Add Item", command=lambda: self.testing)
-        button2 = ttk.Button(self, text="Delete Item", command=lambda: self.delete_tree_item())
+        button1 = ttk.Button(self, text="Add Item", command=self.add_item)
+        button2 = ttk.Button(self, text="Delete Item", command=self.delete_tree_item)
         button3 = ttk.Button(self, text="Send Email")
         button4 = ttk.Button(self, text="Back", command=lambda: controller.show_frame("WelcomePage"))
-        v = tk.StringVar()
+        self.v = tk.StringVar()
 
-        self.entry = tk.Entry(self, textvariable=v)
-        v.set("enter url here")
-        print(self.entry.get())
+        self.e = ttk.Entry(self)
+        self.v.set("Enter url here")
+        self.e.config(textvariable=self.v)
 
         button1.grid(row=0, column=0, padx=5, pady=5)
         button2.grid(row=1, column=0, padx=5, pady=5)
         button3.grid(row=2, column=0, padx=5, pady=5)
         button4.grid(row=3, column=0, padx=5, pady=5)
-        self.entry.grid(row=0, column=1, padx=5, pady=5)
-        print("got here")
+        self.e.grid(row=0, column=1, padx=5, pady=5)
 
     def delete_tree_item(self):
         try:
@@ -149,15 +185,13 @@ class ActionButtons(tk.Frame):
         except IndexError:
             pass
 
-    def testing(self):
-        print(self.entry.get())
+    # def testing(self):
+    #     print(self.entry.get())
 
     def add_item(self):
-        print("Trying to add item")
-        if self.entry.get().find("amazon.com") != -1:  # Just making sure it's an amazon link
-            print("adding item...")
-            item = AmazonItem(self.entry.get().strip())
-            self.entry.delete(0, tk.END)
+        if self.e.get().find("amazon.com") != -1:  # Just making sure it's an amazon link
+            item = AmazonItem(self.e.get().strip())
+            self.e.delete(0, tk.END)
             temp = self.tree.insert("", "end", item.title, text=item.title,
                                     values=("${:.2f}".format(item.current_price)))
             self.tree.insert(temp, "end", text="Highest Price",
@@ -170,6 +204,7 @@ class ActionButtons(tk.Frame):
                              values=("${:.2f}".format(item.avg_price)))
             self.tree.insert(temp, "end", text="Availability",
                              values=item.availability)
+            self.v.set("Enter url here")
         else:
             pass
 

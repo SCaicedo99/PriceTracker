@@ -24,6 +24,7 @@ class AmazonItem:
         self.lowest_price_date = self.__get_lowest_price_date()
         self.avg_price = self.__get_avg_price()
         self.availability = self.__get_availability()
+        print("done with = " + self.title)
 
     def __get_soup(self):
         page = requests.get(self.url, headers=self.headers)
