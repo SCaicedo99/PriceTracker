@@ -2,11 +2,49 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import font as tkfont
 from item import AmazonItem
+import multiprocessing
 import threading
+import smtplib
 
 
 def doNothing():
     print('Do Nothing')
+
+
+def popupmsg(msg, controller):
+    popup = tk.Tk()
+    popup.wm_minsize(150, 85)
+    popup.wm_title("!")
+    popup.wm_maxsize(150, 85)
+    label = ttk.Label(popup, text=msg, font=controller.NORM_FONT)
+    label.pack(side="top", fill="x", pady=10, padx=12)
+    B1 = ttk.Button(popup, text="Okay", command=popup.destroy)
+    B1.pack()
+    popup.mainloop()
+
+
+def send_email(controller, content, recipient):
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
+        server.login('sebascaicedo25@gmail.com', 'vhhrbzhfcvoyffkz')
+
+        subject = 'PriceTracker reminder!'
+        body = content
+
+        msg = f"Subject: {subject}\n\n{body}"
+        server.sendmail(
+            'sebascaicedo25@gmail.com',
+            recipient,
+            msg
+        )
+        print("EMAIL HAS BEEN SENT!")
+
+        server.quit()
+    except IndexError:
+        popupmsg("Select something", controller)
 
 
 class Driver(tk.Tk):
@@ -16,21 +54,21 @@ class Driver(tk.Tk):
         tk.Tk.wm_minsize(self, 600, 230)
         tk.Tk.iconbitmap(self, default='icon.ico')
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight='bold', slant='italic')
-        self.col_font = tkfont.Font(family='Helvetica', size=10, weight='bold')
+        self.NORM_FONT = tkfont.Font(family="Helvetica", size=10)
         self.container = tk.Frame(self, relief='raised', borderwidth=5)
         self.container.pack(side="top", fill="both", expand=True)
         self.container.grid_rowconfigure(1, weight=1)
         self.container.grid_columnconfigure(0, weight=1)
 
-
-
         self.frames = {}
 
         self.frames["WelcomePage"] = WelcomePage(parent=self.container, controller=self)
         self.frames["LoadingScreen"] = LoadingScreen(parent=self.container, controller=self)
+        self.frames["EmailPage"] = EmailPage(parent=self.container, controller=self)
 
         self.frames["WelcomePage"].grid(row=1, column=0, sticky="nsew")
         self.frames["LoadingScreen"].grid(row=1, column=0, sticky="nsew")
+        self.frames["EmailPage"].grid(row=1, column=0, sticky="nsew")
 
         self.show_frame("WelcomePage")
 
@@ -40,14 +78,20 @@ class Driver(tk.Tk):
 
     def init_new_session(self):
         if 'NewSession' not in self.frames:
-            self.frames["NewSession"] = NewSession(parent=self.container, controller=self)
-            self.frames["NewSession"].grid(row=1, column=0, sticky="nsew")
+            NewSession(parent=self.container, controller=self)
+            # self.frames["NewSession"] = NewSession(parent=self.container, controller=self)
+            # self.frames["NewSession"].grid(row=1, column=0, sticky="nsew")
         else:
             self.show_frame("NewSession")
 
     def init_old_session(self):
-        if 'OldSession' not in self.frames:
-            self.frames["OldSession"]
+        if "OldSession" not in self.frames:
+            # TODO If there is time, make the loading screen work
+            # temp_process = multiprocessing.Process(target=OldSession, args=(self.container,
+            #                                                  self))
+            # temp_process.start()
+            # self.show_frame()
+            OldSession(parent=self.container, controller=self)
         else:
             self.show_frame("OldSession")
 
@@ -66,6 +110,42 @@ class LoadingScreen(tk.Frame):
 
     def stop_bar(self):
         self.progress_bar.stop()
+
+
+class EmailPage(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.prev_frame = "WelcomePage"
+        self.controller = controller
+        label1 = tk.Label(self, text="Edit Email ", font=controller.title_font)
+        label2 = tk.Label(self, text="Email content ")
+        label3 = tk.Label(self, text="Recipient ")
+        email_text = tk.Text(self, width=40, height=1)
+        email_text.insert(tk.END, "example@example.com")
+        button1 = ttk.Button(self, text="Back",
+                             command=lambda: controller.show_frame(self.prev_frame))
+        button2 = ttk.Button(self, text="Send Email", command=lambda:
+                             send_email(controller, self.text.get("1.0",
+                                        tk.END).strip(), email_text.get("1.0", tk.END).strip()))
+        body = "Check out this link: "
+        self.text = tk.Text(self, width=40, height=10, wrap="word")
+        self.text.insert(tk.END, body)
+
+        label1.grid(row=0, column=0, padx=20)
+        label2.grid(row=1, column=0)
+        label3.grid(row=2, column=0)
+        email_text.grid(row=2, column=1)
+        self.text.grid(row=1, column=1)
+        button1.grid(row=3, column=2, pady=4)
+        button2.grid(row=3, column=1, pady=5)
+
+
+
+        controller.frames["EmailPage"] = self
+        controller.frames["EmailPage"].grid(row=1, column=0, sticky="nsew")
+
+    def update_body(self, url):
+        self.text.insert(tk.END, url)
 
 
 class WelcomePage(tk.Frame):
@@ -90,29 +170,38 @@ class WelcomePage(tk.Frame):
 class NewSession(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent, height=100, width=100)
+        self.name = "NewSession"
         self.controller = controller
         table = TableOfItems(self, controller)
         table.grid(row=0, column=0, rowspan=2, columnspan=2)
         tree = table.get_tree()
 
-        buttons = ActionButtons(self, controller, tree)
+        buttons = ActionButtons(self, controller, tree=self.table.tree, table=table)
         buttons.grid(row=0, column=3, rowspan=10, columnspan=3)
+
+        controller.frames["NewSession"] = self
+        controller.frames["NewSession"].grid(row=1, column=0, sticky="nsew")
+
+    def get_name(self):
+        return self.name
 
 
 class OldSession(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-
         table = TableOfItems(self, controller=controller, file="amazon_urls.txt")
         table.grid(row=0, column=0, rowspan=2, columnspan=2)
-        tree = table.get_tree()
+        table = table.get_table()
 
-        buttons = ActionButtons(self, controller, tree)
+        buttons = ActionButtons(self, controller, tree=table.tree, table=table)
         buttons.grid(row=0, column=3, rowspan=10, columnspan=3)
 
         controller.frames["OldSession"] = self
         controller.frames["OldSession"].grid(row=1, column=0, sticky="nsew")
+
+    def get_name(self):
+        return self.name
 
 
 class TableOfItems(tk.Frame):
@@ -126,21 +215,22 @@ class TableOfItems(tk.Frame):
         self.tree.pack(side="left")
         vsb = ttk.Scrollbar(self, orient="vertical", command=self.tree.yview)
         vsb.pack(side="right", fill="y")
+        self.items = {}
         if file is not None:
             parse_file = open(file, 'r+').readlines()
-            items = {}
 
             for url in parse_file:
                 temp = AmazonItem(url)
-                items[temp.title] = temp
+                self.items[temp.title] = temp
 
-            for key in items:
-                temp_thread = threading.Thread(target=self.pop_tree, args=(items[key],))
+            for key in self.items:
+                temp_thread = threading.Thread(target=self.populate_tree,
+                                               args=(self.items[key],))
                 temp_thread.start()
         else:
             pass
 
-    def pop_tree(self, item):
+    def populate_tree(self, item):
         temp = self.tree.insert("", "end", item.title, text=item.title,
                                 values=("${:.2f}".format(item.current_price)))
         self.tree.insert(temp, "end", text="Highest Price",
@@ -154,18 +244,21 @@ class TableOfItems(tk.Frame):
         self.tree.insert(temp, "end", text="Availability",
                          values=item.availability)
 
-    def get_tree(self):
-        return self.tree
+    def get_table(self):
+        return self
 
 
 class ActionButtons(tk.Frame):
-    def __init__(self, parent, controller, tree):
+    def __init__(self, parent, controller, tree, table):
         tk.Frame.__init__(self, parent)
+        self.table = table
+        self.parent_name = type(parent).__name__
         self.controller = controller
         self.tree = tree
         button1 = ttk.Button(self, text="Add Item", command=self.add_item)
         button2 = ttk.Button(self, text="Delete Item", command=self.delete_tree_item)
-        button3 = ttk.Button(self, text="Send Email")
+        button3 = ttk.Button(self, text="Send Email",
+                             command=self.show_email_page)
         button4 = ttk.Button(self, text="Back", command=lambda: controller.show_frame("WelcomePage"))
         self.v = tk.StringVar()
 
@@ -179,14 +272,18 @@ class ActionButtons(tk.Frame):
         button4.grid(row=3, column=0, padx=5, pady=5)
         self.e.grid(row=0, column=1, padx=5, pady=5)
 
+    def show_email_page(self):
+        self.controller.show_frame("EmailPage")
+        url = self.table.items[self.table.tree.selection()[0]].url
+        self.controller.frames["EmailPage"].update_body(url)
+        self.controller.frames["EmailPage"].prev_frame = self.parent_name
+        self.controller.show_frame("EmailPage")
+
     def delete_tree_item(self):
         try:
             self.tree.delete(self.tree.selection()[0])
         except IndexError:
             pass
-
-    # def testing(self):
-    #     print(self.entry.get())
 
     def add_item(self):
         if self.e.get().find("amazon.com") != -1:  # Just making sure it's an amazon link
@@ -206,9 +303,8 @@ class ActionButtons(tk.Frame):
                              values=item.availability)
             self.v.set("Enter url here")
         else:
+            self.v.set("Enter url here")
             pass
-
-
 
 
 class Menus:
@@ -236,7 +332,7 @@ class Toolbar:
 
 
 class StatusBar:
-    def __init__(self,parent):
+    def __init__(self, parent):
         self.status = tk.Label(parent, text="Doing nothing(for now)", bd=1, relief=tk.SUNKEN, anchor=tk.W)
         self.status.pack(side=tk.BOTTOM, fill=tk.X)
 
