@@ -21,6 +21,8 @@ tree.insert(id2, "end", "dir 2", text="sub dir 2", values=("2A","2B"))
 tree.insert("", 3, "dir3", text="Dir 3")
 tree.insert("dir3", 3, text=" sub dir 3",values=("3A"," 3B"))
 
+print(tree.set("one"))
+
 tree.pack()
 root.mainloop()
 
