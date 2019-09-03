@@ -9,22 +9,38 @@ class AmazonItem:
     #     instance = super(AmazonItem, cls).__new__(cls, url)
     #     return instance
 
-    def __init__(self, url):
-        self.url = url
-        self.headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                        '(KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'}
-        self.amazon_soup = self.__get_soup()
-        self.camel_soup = self.__get_camel_soup(self.__get_camel_url())
+    def __init__(self, url=None, arr=None):
+        if arr is not None:
+            self.title = arr[0]
+            self.current_price = arr[1]
+            self.highest_price = arr[2]
+            self.highest_price_date = arr[3]
+            self.lowest_price = arr[4]
+            self.lowest_price_date = arr[5]
+            self.avg_price = arr[6]
+            self.availability = arr[7]
+            self.url = arr[8]
 
-        self.title = self.__get_title()
-        self.current_price = self.__get_price()
-        self.highest_price = self.__get_highest_price()
-        self.highest_price_date = self.__get_highest_price_date()
-        self.lowest_price = self.__get_lowest_price()
-        self.lowest_price_date = self.__get_lowest_price_date()
-        self.avg_price = self.__get_avg_price()
-        self.availability = self.__get_availability()
-        print("done with = " + self.title)
+        if url is not None:
+            self.url = url
+            self.headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                            '(KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'}
+            self.amazon_soup = self.__get_soup()
+            self.camel_soup = self.__get_camel_soup(self.__get_camel_url())
+
+            self.title = self.__get_title()
+            self.current_price = self.__get_price()
+            self.highest_price = self.__get_highest_price()
+            self.highest_price_date = self.__get_highest_price_date()
+            self.lowest_price = self.__get_lowest_price()
+            self.lowest_price_date = self.__get_lowest_price_date()
+            self.avg_price = self.__get_avg_price()
+            self.availability = self.__get_availability()
+            print("done with = " + self.title)
+
+    def update(self):
+        self = AmazonItem(url=self.url)
+        print("finished updating {st}...".format(self.title))
 
     def __get_soup(self):
         page = requests.get(self.url, headers=self.headers)
