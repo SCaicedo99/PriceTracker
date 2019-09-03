@@ -2,13 +2,36 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import font as tkfont
 from item import AmazonItem
-import multiprocessing
+from multiprocessing.dummy import Pool as ThreadPool
 import threading
 import smtplib
+import pickle
 
 
 def doNothing():
     print('Do Nothing')
+
+
+def calculateParallel(urls, threads=4):
+    pool = ThreadPool(threads)
+    results = pool.map(AmazonItem, urls)
+    pool.close()
+    pool.join()
+    return results
+
+
+def parseItem(item):
+    arr = [None]*9
+    arr[0] = item.title
+    arr[1] = item.current_price
+    arr[2] = item.highest_price
+    arr[3] = item.highest_price_date
+    arr[4] = item.lowest_price
+    arr[5] = item.lowest_price_date
+    arr[6] = item.avg_price
+    arr[7] = item.availability
+    arr[8] = item.url
+    return arr
 
 
 def popupmsg(msg, controller):
@@ -24,27 +47,23 @@ def popupmsg(msg, controller):
 
 
 def send_email(controller, content, recipient):
-    try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.ehlo()
-        server.starttls()
-        server.ehlo()
-        server.login('sebascaicedo25@gmail.com', 'vhhrbzhfcvoyffkz')
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.ehlo()
+    server.starttls()  # Encrypts the information.
+    server.ehlo()
+    server.login('sebascaicedo25@gmail.com', 'vhhrbzhfcvoyffkz')
 
-        subject = 'PriceTracker reminder!'
-        body = content
+    subject = 'PriceTracker reminder!'
+    body = content
 
-        msg = f"Subject: {subject}\n\n{body}"
-        server.sendmail(
-            'sebascaicedo25@gmail.com',
-            recipient,
-            msg
-        )
-        print("EMAIL HAS BEEN SENT!")
-
-        server.quit()
-    except IndexError:
-        popupmsg("Select something", controller)
+    msg = f"Subject: {subject}\n\n{body}"
+    server.sendmail(
+        'sebascaicedo25@gmail.com',
+        recipient,
+        msg
+    )
+    popupmsg("EMAIL HAS BEEN SENT!")
+    server.quit()
 
 
 class Driver(tk.Tk):
@@ -172,11 +191,12 @@ class NewSession(tk.Frame):
         tk.Frame.__init__(self, parent, height=100, width=100)
         self.name = "NewSession"
         self.controller = controller
-        table = TableOfItems(self, controller)
-        table.grid(row=0, column=0, rowspan=2, columnspan=2)
-        tree = table.get_tree()
+        self.table = TableOfItems(self, controller)
+        self.table.grid(row=0, column=0, rowspan=2, columnspan=2)
 
-        buttons = ActionButtons(self, controller, tree=self.table.tree, table=table)
+        table = self.table.get_table()
+
+        buttons = ActionButtons(self, controller, tree=table.tree, table=table, items_dict=self.table.items)
         buttons.grid(row=0, column=3, rowspan=10, columnspan=3)
 
         controller.frames["NewSession"] = self
@@ -190,11 +210,11 @@ class OldSession(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        table = TableOfItems(self, controller=controller, file="amazon_urls.txt")
-        table.grid(row=0, column=0, rowspan=2, columnspan=2)
-        table = table.get_table()
+        self.table = TableOfItems(self, controller=controller, file="cache.txt")
+        self.table.grid(row=0, column=0, rowspan=2, columnspan=2)
+        table = self.table.get_table()
 
-        buttons = ActionButtons(self, controller, tree=table.tree, table=table)
+        buttons = ActionButtons(self, controller, tree=table.tree, table=table, items_dict=self.table.items)
         buttons.grid(row=0, column=3, rowspan=10, columnspan=3)
 
         controller.frames["OldSession"] = self
@@ -217,10 +237,11 @@ class TableOfItems(tk.Frame):
         vsb.pack(side="right", fill="y")
         self.items = {}
         if file is not None:
-            parse_file = open(file, 'r+').readlines()
-
-            for url in parse_file:
-                temp = AmazonItem(url)
+            parse_file = open(file, 'rb')
+            prev_sess_dict = pickle.load(parse_file)
+            parse_file.close()
+            for item in prev_sess_dict:
+                temp = AmazonItem(arr=prev_sess_dict[item])
                 self.items[temp.title] = temp
 
             for key in self.items:
@@ -249,17 +270,21 @@ class TableOfItems(tk.Frame):
 
 
 class ActionButtons(tk.Frame):
-    def __init__(self, parent, controller, tree, table):
+    def __init__(self, parent, controller, tree, table, items_dict):
         tk.Frame.__init__(self, parent)
         self.table = table
         self.parent_name = type(parent).__name__
         self.controller = controller
         self.tree = tree
+        self.items_dict = items_dict
         button1 = ttk.Button(self, text="Add Item", command=self.add_item)
         button2 = ttk.Button(self, text="Delete Item", command=self.delete_tree_item)
         button3 = ttk.Button(self, text="Send Email",
                              command=self.show_email_page)
-        button4 = ttk.Button(self, text="Back", command=lambda: controller.show_frame("WelcomePage"))
+        button4 = ttk.Button(self, text="Update Selection", command=self.update_selection)
+        button5 = ttk.Button(self, text="Update All", command=self.update_all)
+        button6 = ttk.Button(self, text="Back", command=lambda: controller.show_frame("WelcomePage"))
+        button7 = ttk.Button(self, text="Quit", command=self.quit_window)
         self.v = tk.StringVar()
 
         self.e = ttk.Entry(self)
@@ -270,24 +295,68 @@ class ActionButtons(tk.Frame):
         button2.grid(row=1, column=0, padx=5, pady=5)
         button3.grid(row=2, column=0, padx=5, pady=5)
         button4.grid(row=3, column=0, padx=5, pady=5)
+        button5.grid(row=4, column=0, padx=5, pady=5)
+        button6.grid(row=5, column=0, padx=5, pady=5)
+        button7.grid(row=6, column=0, padx=5, pady=5)
         self.e.grid(row=0, column=1, padx=5, pady=5)
 
     def show_email_page(self):
-        self.controller.show_frame("EmailPage")
-        url = self.table.items[self.table.tree.selection()[0]].url
-        self.controller.frames["EmailPage"].update_body(url)
-        self.controller.frames["EmailPage"].prev_frame = self.parent_name
-        self.controller.show_frame("EmailPage")
-
-    def delete_tree_item(self):
         try:
-            self.tree.delete(self.tree.selection()[0])
+            self.controller.show_frame("EmailPage")
+            url = self.table.items[self.table.tree.selection()[0]].url
+            self.controller.frames["EmailPage"].update_body(url)
+            self.controller.frames["EmailPage"].prev_frame = self.parent_name
+            self.controller.show_frame("EmailPage")
         except IndexError:
-            pass
+            popupmsg("Select an item!")
 
-    def add_item(self):
-        if self.e.get().find("amazon.com") != -1:  # Just making sure it's an amazon link
+    def delete_tree_item(self, item=None):
+        if item is not None:
+            self.tree.delete(item)
+        else:
+            try:
+                del self.tree.items[self.tree.selection()[0]]  # Delete from dictionary
+                self.tree.delete(self.tree.selection()[0])  # delete from tree
+            except IndexError:
+                popupmsg("Select an item!")
+
+    def add_item(self, url=None, index=None, spec_item=None):
+        if spec_item is not None:
+            item = spec_item
+            self.items_dict[item.title] = item
+            temp = self.tree.insert("", index, item.title, text=item.title,
+                                    values=("${:.2f}".format(item.current_price)))
+            self.tree.insert(temp, "end", text="Highest Price",
+                             values=("${:.2f}".format(item.highest_price),
+                                     item.highest_price_date))
+            self.tree.insert(temp, "end", text="Lowest Price",
+                             values=("${:.2f}".format(item.lowest_price),
+                                     item.lowest_price_date))
+            self.tree.insert(temp, "end", text="Average Price",
+                             values=("${:.2f}".format(item.avg_price)))
+            self.tree.insert(temp, "end", text="Availability",
+                             values=item.availability)
+            self.tree.selection_add(item.title)  # Highlights in the treeview
+        elif url is not None:
+            item = AmazonItem(url=url)
+            self.items_dict[item.title] = item
+            temp = self.tree.insert("", index, item.title, text=item.title,
+                                    values=("${:.2f}".format(item.current_price)))
+            self.tree.insert(temp, "end", text="Highest Price",
+                             values=("${:.2f}".format(item.highest_price),
+                                     item.highest_price_date))
+            self.tree.insert(temp, "end", text="Lowest Price",
+                             values=("${:.2f}".format(item.lowest_price),
+                                     item.lowest_price_date))
+            self.tree.insert(temp, "end", text="Average Price",
+                             values=("${:.2f}".format(item.avg_price)))
+            self.tree.insert(temp, "end", text="Availability",
+                             values=item.availability)
+            self.tree.selection_add(item.title)  # Highlights in the treeview
+
+        elif self.e.get().find("amazon.com") != -1:  # Just making sure it's an amazon link
             item = AmazonItem(self.e.get().strip())
+            self.items_dict[item.title] = item
             self.e.delete(0, tk.END)
             temp = self.tree.insert("", "end", item.title, text=item.title,
                                     values=("${:.2f}".format(item.current_price)))
@@ -303,8 +372,48 @@ class ActionButtons(tk.Frame):
                              values=item.availability)
             self.v.set("Enter url here")
         else:
+            popupmsg("Enter valid URL")
             self.v.set("Enter url here")
             pass
+
+    def update_all(self):
+        index = 0
+        urls = [None]*len(self.items_dict)
+        for item in self.items_dict:  # This loop is just to get the urls
+            urls[index] = self.items_dict[item].url
+            index += 1
+
+        arr_amazon_items = calculateParallel(urls)  # array with updated values items
+
+        for am_item in arr_amazon_items:
+            self.items_dict[am_item.title] = am_item  # updating values in the dictionary
+            temp_index = self.tree.index(am_item.title)
+            self.delete_tree_item(item=am_item.title)  # delete old item from tree
+            self.add_item(index=temp_index, spec_item=am_item)  # Add updated item
+
+    def update_selection(self):
+        url = self.items_dict[self.tree.selection()[0]].url
+        _index = self.tree.index(self.tree.selection()[0])
+        del self.items_dict[self.tree.selection()[0]].url
+        self.delete_tree_item(item=self.tree.selection()[0])
+        self.add_item(url=url, index=_index)
+
+    def quit_window(self):
+        if len(self.items_dict) > 0:
+            save_dict = {}
+            for item in self.items_dict:
+                save_dict[item.title] = parseItem(self.items_dict[item])
+
+            print("saving to cache...")
+            file_name = "cache.txt"
+            file = open(file_name, 'wb')
+            pickle.dump(save_dict, file)
+            file.close()
+            self.controller.quit()
+            pass
+        else:
+            print("quitting...")
+            self.controller.quit()
 
 
 class Menus:
